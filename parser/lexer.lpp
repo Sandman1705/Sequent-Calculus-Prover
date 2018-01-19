@@ -1,0 +1,40 @@
+%option noyywrap
+%option nounput
+%option noinput
+
+%{
+
+#include <stdlib.h>
+#include <string>
+
+#include "BaseFormula.h"
+#include "Sequent.h"
+
+#include "parser.hpp"
+
+// [a-zA-Z][a-zA-Z_0-9]*    { yylval.str_attr = new string(yytext); return ATOM; }
+// 0|[1-9][0-9]*            { yylval.num_attr = atoi(yytext); return ATOM; }
+
+%}
+
+%%
+
+true                     return TRUE;
+false                    return FALSE;
+[a-zA-Z][a-zA-Z_0-9]*    { yylval.str_attr = new std::string(yytext); return ATOM; }
+\(                       return *yytext;
+\)                       return *yytext;
+,                        return *yytext;
+:						 return TURNSTILE;
+&                        return AND;
+\|                       return OR;
+=\>                      return IMP;
+\<=\>                    return IFF;
+~                        return NOT;
+\[                       return *yytext;
+\]                       return *yytext;
+!						 return *yytext;
+;                        return *yytext;
+[ \t\n]
+
+%%

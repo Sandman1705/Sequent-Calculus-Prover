@@ -1,0 +1,150 @@
+
+%{
+#include <stdio.h>
+#include <string>
+
+#include <iostream>
+
+extern int yylex();
+
+#define yyerror printf
+
+#include "BaseFormula.h"
+#include "Sequent.h"
+
+#include "AtomicFormula.h"
+#include "LogicConstant.h"
+
+#include "Atom.h"
+#include "True.h"
+#include "False.h"
+#include "Not.h"
+#include "And.h"
+#include "Or.h"
+#include "Imp.h"
+#include "Iff.h"
+
+Seq parsed_sequent;
+//Formula parsed_formula;
+
+%}
+
+//%token<num_attr> ATOM;
+%token<str_attr> ATOM;
+%token TURNSTILE;
+%token<formula_attr> TRUE;
+%token<formula_attr> FALSE;
+%token<formula_attr> NOT;
+%token<formula_attr> AND;
+%token<formula_attr> OR;
+%token<formula_attr> IMP;
+%token<formula_attr> IFF;
+
+%left IFF;
+%left IMP;
+%left OR;
+%left AND;
+%right NOT;
+%left FALSE;
+%left TRUE;
+%left ','
+%nonassoc TURNSTILE;
+
+%type<sequent_attr> sequent
+%type<seqlist_attr> formula_list
+%type<formula_attr> formula
+
+%union {
+  unsigned num_attr;
+  std::string * str_attr;
+  BaseFormula * formula_attr;
+  Sequent * sequent_attr;
+  SeqList * seqlist_attr;
+}
+
+%start input
+
+%%
+
+input : sequent ';'                           {
+												parsed_sequent = Seq($1);
+												return 0; //stop
+											  }
+	  ;
+
+sequent : formula_list TURNSTILE formula_list {
+												SeqList sl;
+												for (auto i = $1->begin(), e = $1->end(); i!=e; ++i)
+													sl.push_back(*i);
+												SeqList sr;
+												for (auto i = $3->begin(), e = $3->end(); i!=e; ++i)
+													sr.push_back(*i);
+												$$ = new Sequent(std::move(sl),std::move(sr));
+												//std::cout << "Parsed: formula_list TURNSTILE formula_list " << std::endl;
+											  }
+		| formula_list TURNSTILE              {
+												SeqList sl;
+												for (auto i = $1->begin(), e = $1->end(); i!=e; ++i)
+													sl.push_back(*i);
+												$$ = new Sequent(std::move(sl),SeqList{});
+												//std::cout << "Parsed: formula_list TURNSTILE " << std::endl;
+											  }
+		| formula_list					      {
+												SeqList sr;
+												for (auto i = $1->begin(), e = $1->end(); i!=e; ++i)
+													sr.push_back(*i);
+												$$ = new Sequent(SeqList{},std::move(sr));
+												//std::cout << "Parsed: formula_list " << std::endl;
+											  }
+		;
+
+formula_list : formula_list ',' formula       {
+												$1->push_back(Formula($3));
+												$$ = $1;
+												//std::cout << "Parsed: formula_list , formula " << std::endl;
+											  }
+			 | formula                        {
+											    $$ = new SeqList{Formula($1)};
+			                                    //std::cout << "Parsed: formula " << std::endl;
+											  }
+			 ;
+
+formula : formula IFF formula                 {
+												$$ = new Iff(Formula($1),Formula($3));
+												//std::cout << "Parsed: IFF " << std::endl;
+											  }
+		| formula IMP formula                 {
+												$$ = new Imp(Formula($1),Formula($3));
+												//std::cout << "Parsed: IMP " << std::endl;
+											  }
+		| formula OR formula                  {
+												$$ = new Or(Formula($1),Formula($3));
+												//std::cout << "Parsed: OR " << std::endl;
+											  }
+		| formula AND formula                 {
+												$$ = new And(Formula($1),Formula($3));
+												//std::cout << "Parsed: AND " << std::endl;
+											  }
+		| NOT formula                         {
+												$$ = new Not(Formula($2));
+												//std::cout << "Parsed: NOT " << std::endl;
+										      }
+		| FALSE                               {
+												$$ = new False();
+											    //std::cout << "Parsed: FALSE " << std::endl;
+											  }
+		| TRUE                                {
+												$$ = new True();
+												//std::cout << "Parsed: TRUE" << std::endl;
+											  }
+		| ATOM                                {
+												$$ = new Atom(*$1);
+												//std::cout << "Parsed: ATOM " << std::endl;
+											  }
+		| '(' formula ')'                     {
+												$$ = $2;
+												//std::cout << "Parsed: ( formula )" << std::endl;
+											  }
+		;
+
+%%
