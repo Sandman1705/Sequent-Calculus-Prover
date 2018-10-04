@@ -69,7 +69,18 @@ int main(int argc, char **argv)
 
     if(input.cmdOptionExists("-h") || input.cmdOptionExists("--help"))
     {
-        std::cout << "Input format:\n"
+        std::cout 
+			<< "Usage: ./prover [--ignore-structural] [--example] [--help] [--continuous | --continuous-ignore-syntax]\n"
+			<< "Formual are taken from standard input. See --help for input format.\n"
+			<< "\n"
+			<< "Options:\n"
+			<< "  -h, --help                      : instructions for properly inputing sequents\n"
+			<< "  -e, --example                   : prints an example of input and proof output \n"
+			<< "  -i, --ignore-structural         : ignores structural rules: thinning and contraction\n"
+			<< "  -c, --continuous                : allows input of multiple sequents; sequents are being read from standard input until first formula with incorrect syntax\n"
+			<< "  -ci, --continuous-ignore-syntax : same as -c except it ignores formulas with incorrect syntax\n"
+			<< "\n"
+			<< "Input format:\n"
             << " NOT               : ~\n"
             << " AND               : &\n"
             << " OR                : |\n"
@@ -80,9 +91,11 @@ int main(int argc, char **argv)
             << " ATOM              : string (letters and digits only)\n"
             << " formula separator : ,\n"
             << " TURNSTILE         : :\n"
-            << " end of sequent    : ;"
+            << " end of sequent    : ;\n"
+			<< "\n"
             << "Example      : ~(a|b), c&d : ~a&~b;\n"
             << "Gives result : (~(a \\/ b)), (c /\\ d) |- ((~a) /\\ (~b))\n"
+			<< "\n"
             << "Sequent can be in format:\n"
             << "\tF : G\n"
             << "\tF :  \t(left side only)\n"
