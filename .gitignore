@@ -4,3 +4,5 @@ parser/lexer.cpp
 parser/parser.cpp
 parser/parser.hpp
 prover.exe
+Sequent Calculus Prover.depend
+Sequent Calculus Prover.layout
